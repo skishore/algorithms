@@ -8,6 +8,10 @@
 //  - Construct Hungarian(n, cost_matrix). The algorithm runs on construction.
 //  - Use GetTotalCost, GetXMatch, and GetYMatch to read the output.
 //
+// The algorithm will minimize the total cost of the matching by default.
+// If you pass maximize=true in the constructor, it will maximize the total
+// cost instead.
+//
 // We restrict to integer costs because the algorithm is not numerically stable.
 // When all inputs are integers, the intermediate edge weights we compute are
 // also guaranteed to be integers.
@@ -27,13 +31,14 @@ inline Cost max(Cost a, Cost b) {
 
 class Hungarian {
  public:
-  // cost_matrix must point to an nxn matrix of NON-NEGATIVE Cost values.
-  Hungarian(int n_, const Cost** cost_matrix_)
+  // cost_matrix must point to an nxn matrix of Cost values.
+  Hungarian(int n_, const Cost** cost_matrix_, bool maximize=false)
       : n(n_), cost_matrix(new Cost[n*n]), x_match(new int[n]),
         y_match(new int[n]), x_label(new Cost[n]), y_label(new Cost[n]) {
+    const int sign = (maximize ? 1 : -1);
     for (int x = 0; x < n; x++) {
       for (int y = 0; y < n; y++) {
-        cost_matrix[n*x+y] = cost_matrix_[x][y];
+        cost_matrix[n*x+y] = sign*cost_matrix_[x][y];
       }
       // Initially, all vertices are unmatched.
       x_match[x] = -1;

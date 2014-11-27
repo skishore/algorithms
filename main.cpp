@@ -25,7 +25,8 @@ static const Cost kCostMatrix[15][15] = {
   {815, 559, 813, 459, 522, 788, 168, 586, 966, 232, 308, 833, 251, 631, 107},
   {813, 883, 451, 509, 615,  77, 281, 613, 459, 205, 380, 274, 302,  35, 805}
 };
-static const int kExpectedCost = 13938;
+static const int kExpectedMinimumCost = 1544;
+static const int kExpectedMaximumCost = 13938;
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -33,9 +34,19 @@ int main(int argc, char** argv) {
   for (int x = 0; x < n; x++) {
     cost_matrix[x] = (Cost*)kCostMatrix[x];
   }
-  Hungarian hungarian(n, (const Cost**)cost_matrix);
-  Cost total_cost = hungarian.GetTotalCost((const Cost**)cost_matrix);
-  std::cout << "Got a matching with total cost " << total_cost
-            << " (expected: " << kExpectedCost << ")" << std::endl;
-  assert(total_cost == kExpectedCost);
+  // Run both the minimization and maximization versions.
+  Hungarian min_hungarian(n, (const Cost**)cost_matrix);
+  Cost min_cost = min_hungarian.GetTotalCost((const Cost**)cost_matrix);
+  std::cout << "Minimization problem: got a matching with "
+            << "total cost " << min_cost << " (expected: "
+            << kExpectedMinimumCost << ")" << std::endl;
+  assert(min_cost == kExpectedMinimumCost);
+
+  const bool maximize = true;
+  Hungarian max_hungarian(n, (const Cost**)cost_matrix, maximize);
+  Cost max_cost = max_hungarian.GetTotalCost((const Cost**)cost_matrix);
+  std::cout << "Maximization problem: got a matching with "
+            << "total cost " << max_cost << " (expected: "
+            << kExpectedMaximumCost << ")" << std::endl;
+  assert(max_cost == kExpectedMaximumCost);
 }
