@@ -1,0 +1,20 @@
+This repository will contain algorithms that I've found useful,
+and that may be useful to other people.
+
+Right now, the only algorithm in the repository is a C++ implementation
+of the Hungarian algorithm for computing minimum perfect matchings.
+Given a complete, weighted bipartite graph with n vertices on each side,
+this algorithm returns a matching of the vertices with minimum total weight.
+
+This algorithm comes up in a whole host of sitations.
+For example, I recently found it to be useful as a subroutine in a game:
+I had n sprites and n positions I wanted them to occupy, and I used the
+algorithm to move each sprite to a position such that the total distance
+that they all moved was minimized. In this case, the vertices were the
+sprites and positions and the weight of an edge was the distance between.
+
+The algorithm comes in a simple header-only library with almost no dependencies.
+It's also in the PUBLIC DOMAIN, so please do whatever you like with it!
+I want the barrier to including this in your project to be as low as possible.
+
+-skishore

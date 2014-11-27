@@ -1,3 +1,6 @@
+// Last edited: 2014-11-27 by skishore
+// This file is not copyrighted. It is in the public domain.
+//
 // Implementation of the Hungarian algorithm for finding minimum perfect
 // matchings. Usage:
 //  - Compute Cost** cost_matrix, an nxn array where each entry is non-negative
