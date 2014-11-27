@@ -3,7 +3,7 @@
 //  - Compute Cost** cost_matrix, an nxn array where each entry is non-negative
 //    and where cost_matrix[x][y] is the cost of matching x with y.
 //  - Construct Hungarian(n, cost_matrix). The algorithm runs on construction.
-//  - Use GetFinalScore, GetXMatch, and GetYMatch to read the output.
+//  - Use GetTotalCost, GetXMatch, and GetYMatch to read the output.
 //
 // We restrict to integer costs because the algorithm is not numerically stable.
 // When all inputs are integers, the intermediate edge weights we compute are
@@ -17,35 +17,13 @@
 typedef int Cost;
 
 namespace {
-inline Cost max(Cost x, Cost y) {
-  return (x > y ? x : y);
+inline Cost max(Cost a, Cost b) {
+  return (a > b ? a : b);
 }
 }  // namespace
 
 class Hungarian {
  public:
-  // The input matrix and its size. We store the matrix in a 1D array and use
-  // cost_matrix[n*x+y] to access the (x, y) entry of the matrix.
-  int n;
-  Cost* cost_matrix;
-
-  // x_match[x] is the y that is currently matched with the given x.
-  // If x is unmatched, then x_match[x] will equal -1. y_match is similar.
-  int* x_match;
-  int* y_match;
-
-  // x_label[x] and y_label[y] are dual variables that satisfy the condition:
-  //   cost_matrix[n*x+y] >= x_label[x] + y_label[y]
-  // We define the cost of the edge (x, y) to be:
-  //   cost(x, y) = cost_matrix[n*x+y] - x_label[x] - y_label[y]
-  // An edge is tight if its cost is zero. Throughout this algorithm, we will
-  // maintain the invariant that all matched edges have cost zero.
-  Cost* x_label;
-  Cost* y_label;
-
-  // The number of edges currently matched.
-  int matched;
-
   // cost_matrix must point to an nxn matrix of NON-NEGATIVE Cost values.
   Hungarian(int n_, const Cost** cost_matrix_)
       : n(n_), cost_matrix(new Cost[n*n]), x_match(new int[n]),
@@ -82,6 +60,51 @@ class Hungarian {
     delete x_label;
     delete y_label;
   }
+
+  // Given the original matrix again, return the total cost of the matching.
+  Cost GetTotalCost(const Cost** cost_matrix) const {
+    Cost score = 0;
+    for (int x = 0; x < n; x++) {
+      score += cost_matrix[x][x_match[x]];
+    }
+    return score;
+  }
+
+  // Return the y-coordinate that was matched with the given x-coordinate.
+  // Note that x-coordinates correspond to the first coordinate of the matrix,
+  // so the total cost is given by
+  //   sum(x = 0,1,...n) cost_matrix[x][GetXMatch(x)]
+  int GetXMatch(int x) {
+    return x_match[x];
+  }
+
+  // Return the x-coordinate that was matched with the given y-coordinate.
+  int GetYMatch(int y) {
+    return y_match[y];
+  }
+
+ private:
+  // The input matrix and its size. We store the matrix in a 1D array and use
+  // cost_matrix[n*x+y] to access the (x, y) entry of the matrix.
+  int n;
+  Cost* cost_matrix;
+
+  // x_match[x] is the y that is currently matched with the given x.
+  // If x is unmatched, then x_match[x] will equal -1. y_match is similar.
+  int* x_match;
+  int* y_match;
+
+  // x_label[x] and y_label[y] are dual variables that satisfy the condition:
+  //   cost_matrix[n*x+y] >= x_label[x] + y_label[y]
+  // We define the cost of the edge (x, y) to be:
+  //   cost(x, y) = cost_matrix[n*x+y] - x_label[x] - y_label[y]
+  // An edge is tight if its cost is zero. Throughout this algorithm, we will
+  // maintain the invariant that all matched edges have cost zero.
+  Cost* x_label;
+  Cost* y_label;
+
+  // The number of edges currently matched.
+  int matched;
 
   Cost GetCost(int x, int y) const {
     return cost_matrix[n*x+y] - x_label[x] - y_label[y];
@@ -221,14 +244,6 @@ class Hungarian {
     delete y_parent;
     delete slack;
     delete slack_x;
-  }
-
-  Cost GetFinalScore(const Cost** cost_matrix) const {
-    Cost score = 0;
-    for (int x = 0; x < n; x++) {
-      score += cost_matrix[x][x_match[x]];
-    }
-    return score;
   }
 };
 

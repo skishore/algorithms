@@ -34,8 +34,8 @@ int main(int argc, char** argv) {
     cost_matrix[x] = (Cost*)kCostMatrix[x];
   }
   Hungarian hungarian(n, (const Cost**)cost_matrix);
-  Cost final_cost = hungarian.GetFinalScore((const Cost**)cost_matrix);
-  std::cout << "Got a matching with total cost " << final_cost
+  Cost total_cost = hungarian.GetTotalCost((const Cost**)cost_matrix);
+  std::cout << "Got a matching with total cost " << total_cost
             << " (expected: " << kExpectedCost << ")" << std::endl;
-  assert(hungarian.GetFinalScore((const Cost**)cost_matrix) == kExpectedCost);
+  assert(total_cost == kExpectedCost);
 }
