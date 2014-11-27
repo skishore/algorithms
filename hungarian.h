@@ -31,8 +31,11 @@ inline Cost max(Cost a, Cost b) {
 
 class Hungarian {
  public:
-  // cost_matrix must point to an nxn matrix of Cost values.
-  Hungarian(int n_, const Cost** cost_matrix_, bool maximize=false)
+  // cost_matrix must be an nxn matrix of Cost values. However, templating this
+  // contstructor allows it to take both Cost** and vector<vector<Cost>>,
+  // without actually including the std::vector library.
+  template <typename T>
+  Hungarian(int n_, const T& cost_matrix_, bool maximize=false)
       : n(n_), cost_matrix(new Cost[n*n]), x_match(new int[n]),
         y_match(new int[n]), x_label(new Cost[n]), y_label(new Cost[n]) {
     const int sign = (maximize ? 1 : -1);
