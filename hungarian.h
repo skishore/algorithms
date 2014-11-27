@@ -55,7 +55,7 @@ class Hungarian {
       RunAugmentationStep();
       assert(matched > last_matched);
       for (int x = 0; x < n; x++) {
-        assert(x_match[x] == -1 || GetCost(x, x_match[x]) == 0);
+        assert(x_match[x] == -1 || GetSlack(x, x_match[x]) == 0);
       }
     }
   }
@@ -113,8 +113,8 @@ class Hungarian {
   // The number of edges currently matched.
   int matched;
 
-  Cost GetCost(int x, int y) const {
-    return cost_matrix[n*x+y] - x_label[x] - y_label[y];
+  Cost GetSlack(int x, int y) const {
+    return x_label[x] + y_label[y] - cost_matrix[n*x+y];
   }
 
   void Match(int x, int y) {
@@ -148,7 +148,7 @@ class Hungarian {
   void FindGreedySolution() {
     for (int x = 0; x < n; x++) {
       for (int y = 0; y < n; y++) {
-        if (x_match[x] == -1 && y_match[y] == -1 && GetCost(x, y) == 0) {
+        if (x_match[x] == -1 && y_match[y] == -1 && GetSlack(x, y) == 0) {
           Match(x, y);
           matched += 1;
         }
@@ -202,7 +202,7 @@ class Hungarian {
     Cost* slack = new Cost[n];
     int* slack_x = new int[n];
     for (int y = 0; y < n; y++) {
-      slack[y] = -GetCost(root, y);
+      slack[y] = GetSlack(root, y);
       assert(slack[y] >= 0);
       slack_x[y] = root;
     }
@@ -239,7 +239,7 @@ class Hungarian {
       x_in_tree[x] = true;
       for (int y = 0; y < n; y++) {
         if (y_parent[y] == -1) {
-          Cost new_slack = -GetCost(x, y);
+          Cost new_slack = GetSlack(x, y);
           if (slack[y] > new_slack) {
             slack[y] = new_slack;
             slack_x[y] = x;
