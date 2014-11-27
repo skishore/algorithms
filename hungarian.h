@@ -49,10 +49,9 @@ class Hungarian {
       const int last_matched = matched;
       RunAugmentationStep();
       assert(matched > last_matched);
-      // Uncomment these lines to run tightness checks.
-      //for (int x = 0; x < n; x++) {
-      //  assert(x_match[x] < 0 || Cost(x, @x_match[x]) == 0)
-      //}
+      for (int x = 0; x < n; x++) {
+        assert(x_match[x] == -1 || GetCost(x, x_match[x]) == 0);
+      }
     }
   }
 
