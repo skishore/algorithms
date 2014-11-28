@@ -36,6 +36,8 @@ int main(int argc, char** argv) {
   }
   // Run both the minimization and maximization versions.
   Hungarian min_hungarian(n, (const Cost**)cost_matrix);
+  Hungarian::Status status = min_hungarian.Solve();
+  assert(status == Hungarian::OK);
   Cost min_cost = min_hungarian.GetTotalCost((const Cost**)cost_matrix);
   std::cout << "Minimization problem: got a matching with "
             << "total cost " << min_cost << " (expected: "
@@ -44,6 +46,8 @@ int main(int argc, char** argv) {
 
   const bool maximize = true;
   Hungarian max_hungarian(n, (const Cost**)cost_matrix, maximize);
+  status = max_hungarian.Solve();
+  assert(status == Hungarian::OK);
   Cost max_cost = max_hungarian.GetTotalCost((const Cost**)cost_matrix);
   std::cout << "Maximization problem: got a matching with "
             << "total cost " << max_cost << " (expected: "

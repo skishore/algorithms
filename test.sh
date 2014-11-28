@@ -1,4 +1,4 @@
 #!/bin/bash
 
-g++ main.cpp && ./a.out
+g++ main.cpp -Wall && ./a.out
 rm a.out

@@ -23,8 +23,6 @@
 #ifndef __HUNGARIAN__
 #define __HUNGARIAN__
 
-#include <cassert>
-
 typedef int Cost;
 
 namespace {
@@ -47,24 +45,47 @@ class Hungarian {
       for (int y = 0; y < n; y++) {
         cost_matrix[n*x+y] = sign*cost_matrix_[x][y];
       }
+    }
+  }
+
+  enum Status {
+    OK = 0,
+    ERROR_INTEGER_OVERFLOW = 1,
+    ERROR_AUGMENTATION_STEP_FAILED = 2,
+    ERROR_NON_TIGHT_EDGE_MATCHED = 3
+  };
+
+  Status Solve() {
+    for (int i = 0; i < n; i++) {
       // Initially, all vertices are unmatched.
-      x_match[x] = -1;
-      y_match[x] = -1;
+      x_match[i] = -1;
+      y_match[i] = -1;
     }
     matched = 0;
-    // We first run heuristics that modify the cost matrix - hence the copy.
-    // These heuristics do not change the optimal solution, but they allow the
-    // algorithm to convert in less than n^2 iterations on easier inputs.
-    ReduceCostMatrix();
+    // We first reduce the matrix so that all entries are non-negative.
+    // This step may fail. In particular, it will fail if there are two entries
+    // in the cost matrix that are more than INT_MAX apart.
+    if (!ReduceCostMatrix()) {
+      return ERROR_INTEGER_OVERFLOW;
+    }
+    // Greedily match pairs vertices that are connected by a tight edge.
+    // This step will help the algorithm terminate in fewer than n augmentation
+    // steps on easier inputs.
     FindGreedySolution();
+    // Run augmentation steps to finish matching the vertices.
     while (matched < n) {
       const int last_matched = matched;
       RunAugmentationStep();
-      assert(matched > last_matched);
+      if (matched <= last_matched) {
+        return ERROR_AUGMENTATION_STEP_FAILED;
+      }
       for (int x = 0; x < n; x++) {
-        assert(x_match[x] == -1 || GetSlack(x, x_match[x]) == 0);
+        if (x_match[x] != -1 && GetSlack(x, x_match[x]) != 0) {
+          return ERROR_NON_TIGHT_EDGE_MATCHED;
+        }
       }
     }
+    return OK;
   }
 
   ~Hungarian() {
@@ -129,10 +150,13 @@ class Hungarian {
     y_match[y] = x;
   }
 
-  void ReduceCostMatrix() {
+  bool ReduceCostMatrix() {
     // Subtract the minimum value in each column from all entries in that column.
     // After this operation, all entries in the matrix will be non-negative, so
     // x-labels of 0 will satisfy the slack inequality.
+    //
+    // Returns false if a value in the matrix is still negative after reduction,
+    // which can only occur due to integer underflow.
     for (int x = 0; x < n; x++) {
       Cost min_cost = 0;
       for (int y = 0; y < n; y++) {
@@ -151,9 +175,13 @@ class Hungarian {
       }
       for (int x = 0; x < n; x++) {
         cost_matrix[n*x+y] -= min_cost;
+        if (cost_matrix[n*x+y] < 0) {
+          return false;
+        }
       }
       y_label[y] = 0;
     }
+    return true;
   }
 
   void FindGreedySolution() {
@@ -163,30 +191,6 @@ class Hungarian {
           Match(x, y);
           matched += 1;
         }
-      }
-    }
-  }
-
-  int FindUnmatchedXValue() const {
-    for (int x = 0; x < n; x++) {
-      if (x_match[x] == -1) {
-        return x;
-      }
-    }
-    assert(false);
-  }
-
-  void UpdateLabels(Cost delta, bool* x_in_tree, int* y_parent, Cost* slack) {
-    for (int x = 0; x < n; x++) {
-      if (x_in_tree[x]) {
-        x_label[x] += delta;
-      }
-    }
-    for (int y = 0; y < n; y++) {
-      if (y_parent[y] == -1) {
-        slack[y] -= delta;
-      } else {
-        y_label[y] -= delta;
       }
     }
   }
@@ -208,6 +212,12 @@ class Hungarian {
     }
 
     int root = FindUnmatchedXValue();
+    if (root == -1) {
+      // All x-values are matched. Return early. This should not occur normally;
+      // RunAugmentationStep should only be called if there are unmatched nodes.
+      return;
+    }
+
     // slack[y] will be the minimum currently-known slack between y and any
     // node on the left, and slack_x[y] will be the node that minimizes it.
     Cost* slack = new Cost[n];
@@ -261,6 +271,33 @@ class Hungarian {
     delete[] y_parent;
     delete[] slack;
     delete[] slack_x;
+  }
+
+  int FindUnmatchedXValue() const {
+    for (int x = 0; x < n; x++) {
+      if (x_match[x] == -1) {
+        return x;
+      }
+    }
+    // We should NEVER reach this point while running the algorithm.
+    // If all x-values are matched, we should not be in an augmentation step.
+    //assert(false);
+    return -1;
+  }
+
+  void UpdateLabels(Cost delta, bool* x_in_tree, int* y_parent, Cost* slack) {
+    for (int x = 0; x < n; x++) {
+      if (x_in_tree[x]) {
+        x_label[x] += delta;
+      }
+    }
+    for (int y = 0; y < n; y++) {
+      if (y_parent[y] == -1) {
+        slack[y] -= delta;
+      } else {
+        y_label[y] -= delta;
+      }
+    }
   }
 };
 
