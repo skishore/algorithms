@@ -3,14 +3,18 @@
 //
 // Implementation of the Hungarian algorithm for finding minimum perfect
 // matchings. Usage:
-//  - Compute Cost** cost_matrix, an nxn array where each entry is non-negative
-//    and where cost_matrix[x][y] is the cost of matching x with y.
+//  - Compute Cost** cost_matrix, an nxn array where cost_matrix[x][y]
+//    is the cost of matching x with y.
 //  - Construct Hungarian(n, cost_matrix). The algorithm runs on construction.
 //  - Use GetTotalCost, GetXMatch, and GetYMatch to read the output.
 //
 // The algorithm will minimize the total cost of the matching by default.
 // If you pass maximize=true in the constructor, it will maximize the total
 // cost instead.
+//
+// Costs in the cost matrix may be arbitrary integers. The first step of the
+// algorithm is to reduce the matrix so that all costs are non-negative, but
+// but this is handled entirely within the solver.
 //
 // We restrict to integer costs because the algorithm is not numerically stable.
 // When all inputs are integers, the intermediate edge weights we compute are
@@ -24,8 +28,8 @@
 typedef int Cost;
 
 namespace {
-inline Cost max(Cost a, Cost b) {
-  return (a > b ? a : b);
+inline Cost min(Cost a, Cost b) {
+  return (a < b ? a : b);
 }
 }  // namespace
 
@@ -38,7 +42,7 @@ class Hungarian {
   Hungarian(int n_, const T& cost_matrix_, bool maximize=false)
       : n(n_), cost_matrix(new Cost[n*n]), x_match(new int[n]),
         y_match(new int[n]), x_label(new Cost[n]), y_label(new Cost[n]) {
-    const int sign = (maximize ? 1 : -1);
+    const int sign = (maximize ? -1 : 1);
     for (int x = 0; x < n; x++) {
       for (int y = 0; y < n; y++) {
         cost_matrix[n*x+y] = sign*cost_matrix_[x][y];
@@ -106,10 +110,10 @@ class Hungarian {
 
   // x_label[x] and y_label[y] are dual variables that satisfy the condition:
   //   cost_matrix[n*x+y] >= x_label[x] + y_label[y]
-  // We define the cost of the edge (x, y) to be:
-  //   cost(x, y) = cost_matrix[n*x+y] - x_label[x] - y_label[y]
-  // An edge is tight if its cost is zero. Throughout this algorithm, we will
-  // maintain the invariant that all matched edges have cost zero.
+  // We define the slack of the edge (x, y) to be:
+  //   slack(x, y) = cost_matrix[n*x+y] - x_label[x] - y_label[y]
+  // An edge is tight if its slack is zero. Throughout this algorithm, we will
+  // maintain the invariant that all matched edges are tight.
   Cost* x_label;
   Cost* y_label;
 
@@ -117,7 +121,7 @@ class Hungarian {
   int matched;
 
   Cost GetSlack(int x, int y) const {
-    return x_label[x] + y_label[y] - cost_matrix[n*x+y];
+    return cost_matrix[n*x+y] - x_label[x] - y_label[y];
   }
 
   void Match(int x, int y) {
@@ -126,23 +130,27 @@ class Hungarian {
   }
 
   void ReduceCostMatrix() {
+    // Subtract the minimum value in each column from all entries in that column.
+    // After this operation, all entries in the matrix will be non-negative, so
+    // x-labels of 0 will satisfy the slack inequality.
     for (int x = 0; x < n; x++) {
-      Cost max_cost = 0;
+      Cost min_cost = 0;
       for (int y = 0; y < n; y++) {
-        max_cost = max(max_cost, cost_matrix[n*x+y]);
+        min_cost = min(min_cost, cost_matrix[n*x+y]);
       }
       for (int y = 0; y < n; y++) {
-        cost_matrix[n*x+y] -= max_cost;
+        cost_matrix[n*x+y] -= min_cost;
       }
       x_label[x] = 0;
     }
+    // Do the same for y.
     for (int y = 0; y < n; y++) {
-      Cost max_cost = 0;
+      Cost min_cost = 0;
       for (int x = 0; x < n; x++) {
-        max_cost = max(max_cost, cost_matrix[n*x+y]);
+        min_cost = min(min_cost, cost_matrix[n*x+y]);
       }
       for (int x = 0; x < n; x++) {
-        cost_matrix[n*x+y] -= max_cost;
+        cost_matrix[n*x+y] -= min_cost;
       }
       y_label[y] = 0;
     }
@@ -171,14 +179,14 @@ class Hungarian {
   void UpdateLabels(Cost delta, bool* x_in_tree, int* y_parent, Cost* slack) {
     for (int x = 0; x < n; x++) {
       if (x_in_tree[x]) {
-        x_label[x] -= delta;
+        x_label[x] += delta;
       }
     }
     for (int y = 0; y < n; y++) {
       if (y_parent[y] == -1) {
         slack[y] -= delta;
       } else {
-        y_label[y] += delta;
+        y_label[y] -= delta;
       }
     }
   }
