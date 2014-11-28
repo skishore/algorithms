@@ -214,7 +214,6 @@ class Hungarian {
     int* slack_x = new int[n];
     for (int y = 0; y < n; y++) {
       slack[y] = GetSlack(root, y);
-      assert(slack[y] >= 0);
       slack_x[y] = root;
     }
     x_in_tree[root] = true;
