@@ -64,11 +64,11 @@ class Hungarian {
   }
 
   ~Hungarian() {
-    delete cost_matrix;
-    delete x_match;
-    delete y_match;
-    delete x_label;
-    delete y_label;
+    delete[] cost_matrix;
+    delete[] x_match;
+    delete[] y_match;
+    delete[] x_label;
+    delete[] y_label;
   }
 
   // Given the original matrix again, return the total cost of the matching.
@@ -250,10 +250,10 @@ class Hungarian {
         }
       }
     }
-    delete x_in_tree;
-    delete y_parent;
-    delete slack;
-    delete slack_x;
+    delete[] x_in_tree;
+    delete[] y_parent;
+    delete[] slack;
+    delete[] slack_x;
   }
 };
 
