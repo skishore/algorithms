@@ -5,7 +5,8 @@
 // matchings. Usage:
 //  - Compute Cost** cost_matrix, an nxn array where cost_matrix[x][y]
 //    is the cost of matching x with y.
-//  - Construct Hungarian(n, cost_matrix). The algorithm runs on construction.
+//  - Construct Hungarian(n, cost_matrix).
+//  - Call Solve() on the Hungarian instance and verify that its status is OK.
 //  - Use GetTotalCost, GetXMatch, and GetYMatch to read the output.
 //
 // The algorithm will minimize the total cost of the matching by default.
