@@ -1,7 +1,10 @@
-// Last edited: 2014-11-27 by skishore
-// This file is not copyrighted. It is in the public domain.
+// Written in 2015 by Shaunak Kishore (kshaunak@gmail.com).
 //
-// Implementation of the Hungarian algorithm for finding minimum perfect
+// To the extent possible under law, the author(s) have dedicated all copyright
+// and related and neighboring rights to this software to the public domain
+// worldwide. This software is distributed without any warranty.
+//
+// Implementation of the Hungarian algorithm for finding minimum-weight
 // matchings. Usage:
 //  - Compute Cost** cost_matrix, an nxn array where cost_matrix[x][y]
 //    is the cost of matching x with y.

@@ -1,7 +1,36 @@
 "use strict";
 
+// Written in 2015 by Shaunak Kishore (kshaunak@gmail.com).
+//
+// To the extent possible under law, the author(s) have dedicated all copyright
+// and related and neighboring rights to this software to the public domain
+// worldwide. This software is distributed without any warranty.
+//
+// Implementation of the Hungarian algorithm for finding minimum-weight
+// matchings. Usage:
+//  - Compute cost_matrix, an nxn array where cost_matrix[x][y]
+//    is the cost of matching x with y.
+//  - Construct Hungarian(n, cost_matrix).
+//  - Read x_match or y_match to get the output. x_match will be an n-element
+//    array such that the cost of the optimal matching is:
+//       sum{i in [0...n]} cost_matrix[i][x_match[i]]
+//
+// The algorithm will minimize the total cost of the matching. You can compute
+// a maximum-weight matching by negating all of the costs.
+//
+// Costs in the cost matrix may be arbitrary integers. The first step of the
+// algorithm is to reduce the matrix so that all costs are non-negative, but
+// but this is handled entirely within the solver.
+//
+// We restrict to integer costs because the algorithm is not numerically stable.
+// When all inputs are integers, the intermediate edge weights we compute are
+// also guaranteed to be integers.
+//
+// TODO(skishore): Implement a maximum-weight flag.
+// TODO(skishore): Write tests for this version.
+//
 // This algorithm was written in Coffeescript for another one of my projects:
-// https://github.com/skishore/tesseract/blob/master/coffee/hungarian.coffee 
+// https://github.com/skishore/tesseract/blob/master/coffee/hungarian.coffee
 
 var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
